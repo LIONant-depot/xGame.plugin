@@ -1,6 +1,6 @@
 // The compiler of the Game resource: the Game's list of script modules in, the CMake project of the game out.
 //
-// The project (<project>/Cache/Script/CMakeLists.txt) includes the CMake file that the ScriptModule compiler wrote for each module (the Game compiles after the modules: its plugin
+// The project (<project>/Cache/Script/<Game guid>/CMakeLists.txt, one per Game resource) includes the CMake file that the ScriptModule compiler wrote for each module (the Game compiles after the modules: its plugin
 // says RunAfter ScriptModule), so what a module is made of is decided in one place, its own compile. This one only puts them together.
 //
 // What this compile depends on is the descriptor of the Game and the log of each module's compile (dependencies.txt): the log is written when the module's compile ENDS, so the project
@@ -84,18 +84,13 @@ namespace xgame_compiler
             if (bFailed) return xerr::create_f<state, "Game: a script module is not ready">();
 
             //
-            // The project: written when it changed, and only by the Game that the project builds (Project.config/Script.config.txt names it; a project that does not say yet
-            // is built by whichever Game is compiled). A second Game resource is compiled and checked all the same, and leaves the project alone.
+            // The project: <project>/Cache/Script/<this Game>/CMakeLists.txt, written when it changed. Every Game has its own project (Games share the CMake files of the modules, and
+            // nothing else), so the one the editor runs and the ones it does not are compiled and checked the same way.
             //
             displayProgressBar("Writing the project", 0.7f);
-            const std::string Cmake = xgame::cmake::Assemble(Files);
-            xgame::script_config Config;
-            xgame::LoadScriptConfig(m_ProjectPaths.m_Project, Config);
-            const bool bProjectsGame = Config.m_Game.empty() || Config.m_Game.m_Instance == m_ResourceGuid;
-            if (!bProjectsGame) LogMessage(xresource_pipeline::msg_type::INFO, "This is not the Game that the project builds (Project.config/Script.config.txt names another one): the project is not written");
-            if (bProjectsGame)
+            const std::string Cmake = xgame::cmake::Assemble(Files, m_ResourceGuid.m_Value);
             {
-                const auto CMakeLists = Project / L"Cache" / L"Script" / L"CMakeLists.txt";
+                const auto CMakeLists = Project / xstrtool::To(xgame::ScriptFolderRelative(xgame::game_ref{ m_ResourceGuid })) / L"CMakeLists.txt";
                 std::string Old;
                 if (!(xscript::module::ReadAll(CMakeLists, Old) && Old == Cmake))
                 {

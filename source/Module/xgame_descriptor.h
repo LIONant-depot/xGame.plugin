@@ -3,7 +3,7 @@
 #pragma once
 
 // The Game resource: the game's code, as the list of the script modules it is made of. It replaces the project's Script.config.txt list: the resource pipeline
-// compiles it (see xgame_compiler) into the CMake project of the game (<project>/Cache/Script/CMakeLists.txt) from the CMake files that the ScriptModule compiler wrote for
+// compiles it (see xgame_compiler) into the CMake project of the game (<project>/Cache/Script/<Game guid>/CMakeLists.txt) from the CMake files that the ScriptModule compiler wrote for
 // each module, so a cleared cache, a new checkout or a build without the editor all get the project from the same rule that makes every other compiled resource.
 //
 //      <resource>.desc/info.txt         what every resource has
@@ -51,11 +51,11 @@ namespace xgame
     };
     namespace details { struct factory_holder { inline static factory s_Instance{}; }; }
 
-    // {Project}\Project.config\Script.config.txt: which Game resource the project builds (the editor reads and writes it; the compiler of the Game reads it, to know whether the project it
-    // makes is this one's: only the project's Game writes Cache/Script/CMakeLists.txt, a second Game resource of the project is compiled and checked but leaves the project alone).
+    // {Project}\Project.config\Script.config.txt: the project's default Game, the one the editor loads when it starts (the editor reads and writes it). The compiler does not read it: every
+    // Game resource of the project is compiled into its own game project (Cache/Script/<guid>/).
     struct script_config
     {
-        // The Game resource the project builds and loads.
+        // The Game resource the editor loads at startup.
         game_ref                            m_Game = {};
 
         // What this file said before the Game resource existed: the script modules of the project, as a bare list of guids. Read once and moved into a Game resource by the editor
@@ -64,7 +64,7 @@ namespace xgame
 
         XPROPERTY_DEF
         ( "ScriptConfig", script_config
-        , obj_member<"Game",       &script_config::m_Game,       member_help<"The project's own Game: the one the editor builds and loads, and the one every Level runs under that does not name its own (SetLevelGame). Create Games in the Asset Browser (type Game).">>
+        , obj_member<"Game",       &script_config::m_Game,       member_help<"The project's default Game: the one the editor builds and loads when it starts. A Level runs under the Game it names (SetLevelGame), never under this one by default. Create Games in the Asset Browser (type Game).">>
         , obj_member<"ModuleRefs", &script_config::m_ModuleRefs, member_flags<flags::DONT_SHOW>>
         )
     };
@@ -139,6 +139,11 @@ namespace xgame
     }
     inline std::string ModuleCMakeRelative(const xscript::module::module_ref& Module) noexcept { return RelativeModulePath(Module, "Cache/Resources/Platforms/WINDOWS"); }
     inline std::string ModuleLogRelative(const xscript::module::module_ref& Module)   noexcept { return RelativeModulePath(Module, "Cache/Resources/Logs") + ".log/Log.txt"; }
+    // The game project of a Game resource: <project>/Cache/Script/<guid>/ (CMakeLists.txt, and the build the editor makes from it). Every Game has its own, so Games that share script modules
+    // do not disturb each other's configure and build. And the folder of its DLL, in the compiled resources (not Game/<lo>/<hi>/<guid>, the stamp of the compiled resource: for a small guid the two collide).
+    inline std::string ScriptFolderRelative(const game_ref& Game) noexcept  { return std::format("Cache/Script/{:X}", Game.m_Instance.m_Value); }
+    inline std::string GameDllFolderRelative(const game_ref& Game) noexcept { return std::format("Cache/Resources/Platforms/WINDOWS/GameDll/{:X}", Game.m_Instance.m_Value); }
+
     // The folder of a Game resource (user descriptors, then the system ones): found from the project's path and the guid alone, no resource manager needed.
     inline std::filesystem::path FindGameFolder(const std::filesystem::path& Project, const game_ref& Game) noexcept
     {
