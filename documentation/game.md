@@ -53,10 +53,14 @@ after that compile began.
 
 ## Levels and Games
 
-A Level names the Game it runs under (`Game` in its Descriptor.txt); empty means the project's Game. A Game's levels are a query (`ListLevels -Game <asset guid>`), not a list the Game holds.
-`SetLevelGame -Level <hex16> [-Game <asset guid>]` sets it (undoable, written at once) and refuses a Game that does not list a module the Level's scenes need, naming the module; `GetLevelGame -Level <hex16>`
-says which Game a Level runs under and whether the Level names it. One Game.dll runs in the editor, so a Level that names a Game other than the project's cannot open for now (`OpenLevel` says why and what to do);
-the toolbar of a Level shows its Game (red, with the reason, when it cannot run the scenes), and its right-click menu in the Level tree has Game > the Games of the project. `AddProjectModuleReference`,
+A Level names the Game it runs under (`Game` in its Descriptor.txt). A Level without a Game has no scripts, components or systems of any module: there is no fallback to the project's Game (that one only says which Game
+the editor builds). The modules the Level's scenes need must all be listed by its Game, or the Level has an error: the toolbar and the Inspector show it in red, `OpenLevel` says ERROR, and Play and Step refuse (the Play
+button is greyed) because the world would run without what its scenes use. A Game's levels are a query (`ListLevels -Game <asset guid>`), not a list the Game holds.
+`SetLevelGame -Level <hex16> [-Game <asset guid>]` sets it (undoable, written at once; without -Game the Level names none) and refuses a Game (or none) that does not list a module the Level's scenes need, naming the module;
+`GetLevelGame -Level <hex16>` says which Game a Level names. One Game.dll runs in the editor, so a Level that names a Game other than the project's cannot open for now (`OpenLevel` says why and what to do);
+the right-click menu of the Level in the Level tree has Game > the Games of the project. Clicking the Level row in the Level tree selects the Level (`SelectLevel`): the Inspector then shows the Level's own descriptor
+in the property inspector - its Scenes (read-only: the tree adds and removes them) and its Game, a resource reference you pick or drag a Game onto (undone with the Level's own Ctrl+Z, via the session's `SetLevelGame`) -
+and under it the modules the Game lists and what each scene needs from it; `DescribeLevel` says the same as text. Selecting an entity brings the entity's properties back. `AddProjectModuleReference`,
 `RemoveProjectModuleReference` and `ListProjectModuleReferences` take `-Game <asset guid>` to work on any Game; the module editor's Overview says which Games list the module.
 
 ## Scenes and Games
