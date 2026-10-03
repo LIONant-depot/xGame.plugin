@@ -1,7 +1,7 @@
 # The Game resource
 
 The game's code is made of **script modules** (ScriptModule resources, see `xscript_module.plugin/documentation/editor.md`). The **Game** resource lists the modules a game is
-built from, and the resource pipeline makes the CMake project of the game from it. `Project.config/Script.config.txt` says which Game resource the project builds.
+built from, and the resource pipeline makes the CMake project of the game from it. The project has no Game of its own: every Level names the Game it runs under.
 
 ```
 <resource>.desc/info.txt         what every resource has
@@ -30,20 +30,18 @@ after that compile began.
 
 ## Using it
 
-- Create a Game resource in the Asset Browser (type **Game**), add the modules in its editor (a list of module pickers), and in **Project Settings > Scripting** pick it as the project's Game.
-  A project made before the Game resource gets one named *Game* from its old module list at the first start.
-- A module added with `AddProjectModuleReference` joins the project's Game; the project gets a Game resource when it has none.
+- Create a Game resource in the Asset Browser (type **Game**), add the modules in its editor (a list of module pickers), and give it to the Levels that run on it (the Level's `Game` in the Inspector, or `SetLevelGame`).
+- A module added with `AddProjectModuleReference -Game <asset guid>` joins that Game.
 - The modules have to be in the same project as the Game (the compiler finds them from the project's folder).
 
 ## Commands
 
 | command | |
 | --- | --- |
-| `ListProjectModuleReferences` | the project's Game (`Game: <asset guid>`) and its modules, one asset guid per line |
-| `AddProjectModuleReference -Module <asset guid>` | adds a module to the project's Game (undoable) |
-| `RemoveProjectModuleReference -Module <asset guid>` | removes it (undoable; refused when a scene that is open uses components that only that module brings) |
-| `SetProjectGame -Game <asset guid>` | which Game resource the project builds (undoable) |
-| `RegenerateProjectModuleSources` | compiles the Game again (recovery) |
+| `ListProjectModuleReferences -Game <asset guid>` | the Game (`Game: <asset guid>`) and its modules, one asset guid per line |
+| `AddProjectModuleReference -Module <asset guid> -Game <asset guid>` | adds a module to the Game (undoable) |
+| `RemoveProjectModuleReference -Module <asset guid> -Game <asset guid>` | removes it (undoable; refused when a scene that is open uses components that only that module brings) |
+| `RegenerateProjectModuleSources [-Game <asset guid>]` | compiles the Game again, every Game of the project when none is given (recovery) |
 | `CreateAsset -Type A3F1D6C0452E9B17 ...` | a new Game resource |
 | the Game editor's `Compile`, `CompileStatus`, `SetProperty`, `Save`... | the generic descriptor editor commands |
 
@@ -53,15 +51,14 @@ after that compile began.
 
 ## Levels and Games
 
-A Level names the Game it runs under (`Game` in its Descriptor.txt). A Level without a Game has no scripts, components or systems of any module: there is no fallback to the project's Game (that one only says which Game
-the editor builds). The modules the Level's scenes need must all be listed by its Game, or the Level has an error: the toolbar and the Inspector show it in red, `OpenLevel` says ERROR, and Play and Step refuse (the Play
+A Level names the Game it runs under (`Game` in its Descriptor.txt). A Level without a Game has no scripts, components or systems of any module: there is no fallback: the project has no Game of its own. The modules the Level's scenes need must all be listed by its Game, or the Level has an error: the toolbar and the Inspector show it in red, `OpenLevel` says ERROR, and Play and Step refuse (the Play
 button is greyed) because the world would run without what its scenes use. A Game's levels are a query (`ListLevels -Game <asset guid>`), not a list the Game holds.
 `SetLevelGame -Level <hex16> [-Game <asset guid>]` sets it (undoable, written at once; without -Game the Level names none) and refuses a Game (or none) that does not list a module the Level's scenes need, naming the module;
-`GetLevelGame -Level <hex16>` says which Game a Level names. One Game.dll runs in the editor, so a Level that names a Game other than the project's cannot open for now (`OpenLevel` says why and what to do);
+`GetLevelGame -Level <hex16>` says which Game a Level names. Every Level runs on its own engine copies and the Game.dll of the Game it names (see `documentation/Editors/engine_copies.md` of xLION), so Levels of different Games open and play at the same time;
 the right-click menu of the Level in the Level tree has Game > the Games of the project. Clicking the Level row in the Level tree selects the Level (`SelectLevel`): the Inspector then shows the Level's own descriptor
 in the property inspector - its Scenes (read-only: the tree adds and removes them) and its Game, a resource reference you pick or drag a Game onto (undone with the Level's own Ctrl+Z, via the session's `SetLevelGame`) -
 and under it the modules the Game lists and what each scene needs from it; `DescribeLevel` says the same as text. Selecting an entity brings the entity's properties back. `AddProjectModuleReference`,
-`RemoveProjectModuleReference` and `ListProjectModuleReferences` take `-Game <asset guid>` to work on any Game; the module editor's Overview says which Games list the module.
+`RemoveProjectModuleReference` and `ListProjectModuleReferences` take `-Game <asset guid>` (required); the module editor's Overview says which Games list the module.
 
 ## Scenes and Games
 

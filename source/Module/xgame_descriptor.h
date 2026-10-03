@@ -51,8 +51,8 @@ namespace xgame
     };
     namespace details { struct factory_holder { inline static factory s_Instance{}; }; }
 
-    // {Project}\Project.config\Script.config.txt: the project's default Game, the one the editor loads when it starts (the editor reads and writes it). The compiler does not read it: every
-    // Game resource of the project is compiled into its own game project (Cache/Script/<guid>/).
+    // {Project}\Project.config\Script.config.txt: the project's old default Game. Nothing reads it any more (the editor does not, the compiler never did): a Level names the Game it runs under, and
+    // every Game resource of the project is compiled into its own game project (Cache/Script/<guid>/). Kept so that the file of an old project still has a reader that says what it was.
     struct script_config
     {
         // The Game resource the editor loads at startup.
