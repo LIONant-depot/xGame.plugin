@@ -51,6 +51,14 @@ after that compile began.
 
 `xscript_module_compiler.exe` and `xgame_compiler.exe` are built by each plugin's `build/CreateAndBuildProject.bat`, and by the root `CMakeLists.txt` of xLION when they are missing.
 
+## Levels and Games
+
+A Level names the Game it runs under (`Game` in its Descriptor.txt); empty means the project's Game. A Game's levels are a query (`ListLevels -Game <asset guid>`), not a list the Game holds.
+`SetLevelGame -Level <hex16> [-Game <asset guid>]` sets it (undoable, written at once) and refuses a Game that does not list a module the Level's scenes need, naming the module; `GetLevelGame -Level <hex16>`
+says which Game a Level runs under and whether the Level names it. One Game.dll runs in the editor, so a Level that names a Game other than the project's cannot open for now (`OpenLevel` says why and what to do);
+the toolbar of a Level shows its Game (red, with the reason, when it cannot run the scenes), and its right-click menu in the Level tree has Game > the Games of the project. `AddProjectModuleReference`,
+`RemoveProjectModuleReference` and `ListProjectModuleReferences` take `-Game <asset guid>` to work on any Game; the module editor's Overview says which Games list the module.
+
 ## Scenes and Games
 
 A Game is compatible with a scene when it lists every script module the scene's components come from. See `xscript_module.plugin/documentation/editor.md` ("Scenes need modules") for `ListSceneModules`,

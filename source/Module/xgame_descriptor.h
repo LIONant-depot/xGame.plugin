@@ -64,7 +64,7 @@ namespace xgame
 
         XPROPERTY_DEF
         ( "ScriptConfig", script_config
-        , obj_member<"Game",       &script_config::m_Game,       member_help<"The Game resource that the project builds: the script modules it is made of. Create one in the Asset Browser (type Game).">>
+        , obj_member<"Game",       &script_config::m_Game,       member_help<"The project's own Game: the one the editor builds and loads, and the one every Level runs under that does not name its own (SetLevelGame). Create Games in the Asset Browser (type Game).">>
         , obj_member<"ModuleRefs", &script_config::m_ModuleRefs, member_flags<flags::DONT_SHOW>>
         )
     };
