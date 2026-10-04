@@ -26,7 +26,7 @@ namespace xgame
 
         XPROPERTY_VDEF
         ( "Game", descriptor
-        , obj_member<"Modules", &descriptor::m_Modules, member_ui_open<true>>
+        , obj_member<"Modules", &descriptor::m_Modules, member_ui_open<true>, member_flags<flags::SMALL_RESOURCE>>
         )
     };
     XPROPERTY_VREG(descriptor)
