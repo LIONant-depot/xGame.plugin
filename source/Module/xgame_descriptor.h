@@ -76,7 +76,7 @@ namespace xgame
         if (!std::filesystem::exists(ConfigFolder)) std::filesystem::create_directories(ConfigFolder);
 
         xtextfile::stream Stream;
-        if (auto Err = Stream.Open(false, std::format(L"{}\\Script.config.txt", ConfigFolder), { xtextfile::file_type::TEXT }); Err)
+        if (auto Err = Stream.Open(false, std::format(L"{}\\Script.config.txt", ConfigFolder), xtextfile::file_type::TEXT); Err)
             return Err;
 
         xproperty::settings::context Context;
@@ -87,7 +87,7 @@ namespace xgame
     inline xerr LoadScriptConfig(const std::wstring& ProjectPath, script_config& Config) noexcept
     {
         xtextfile::stream Stream;
-        if (auto Err = Stream.Open(true, std::format(L"{}\\Project.config\\Script.config.txt", ProjectPath), { xtextfile::file_type::TEXT }); Err)
+        if (auto Err = Stream.Open(true, std::format(L"{}\\Project.config\\Script.config.txt", ProjectPath), xtextfile::file_type::TEXT); Err)
             return {};
 
         xproperty::settings::context Context;
