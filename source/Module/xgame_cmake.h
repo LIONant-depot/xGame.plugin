@@ -50,6 +50,10 @@ namespace xgame::cmake
         C += "get_filename_component(GAME_PROJECT_ROOT \"${CMAKE_CURRENT_LIST_DIR}/../../..\" ABSOLUTE)       # <project>/Cache/Script/<this Game>/CMakeLists.txt\n";
         C += "if(NOT DEFINED XGPU_ROOT)\n  get_filename_component(XGPU_ROOT \"${GAME_PROJECT_ROOT}/..\" ABSOLUTE)       # the project sits next to the engine, like example.lionprj in the xLION checkout\nendif()\n";
         C += "if(NOT DEFINED XGPU_BIN_DIR)\n  message(FATAL_ERROR \"XGPU_BIN_DIR is not set: give the folder of xLION's build that holds xLIONCore (cmake -DXGPU_BIN_DIR=<xLION>/Build/xLION.vs2022)\")\nendif()\n\n";
+        // Built the way the engine it links was: a build of xLION made with a project include (the AddressSanitizer build, Build/ci/msvc_asan.cmake) gives the game the same include. A
+        // Game.dll without it shares the engine's containers (the world's vectors) but not their AddressSanitizer bookkeeping: what it adds to them is unannotated, and the engine's
+        // next read of it is reported as a false container-overflow (xscene::system_usage::EventGroups) when the host exes have ASan: so the generated game CMakeLists includes Build/ci/msvc_asan.cmake and the runtime-built Game.dll is ASan-instrumented too. Not yet verified by a full run. The normal build has no include and the text stays the same everywhere.
+        C += "load_cache(\"${XGPU_BIN_DIR}\" READ_WITH_PREFIX XLION_ CMAKE_PROJECT_xLION_INCLUDE)\nif(XLION_CMAKE_PROJECT_xLION_INCLUDE)\n  include(\"${XLION_CMAKE_PROJECT_xLION_INCLUDE}\")\nendif()\n\n";
 
         C += "# the CMake file of each script module: its files, libraries and defines, and <module>_apply(target)\n";
         C += "set(XSCRIPT_MODULE_PREFIXES)\n";
