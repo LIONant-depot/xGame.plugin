@@ -68,7 +68,9 @@ namespace xgame::cmake
         // kept out of the precompiled header.
         C += "set(BACKEND_SOURCES \"${XGPU_ROOT}/dependencies/xtextfile/source/xtextfile.cpp\" \"${XGPU_ROOT}/dependencies/xproperty/source/xcore/my_properties.cpp\")\n";
         C += "add_library(Game SHARED \"${XGPU_ROOT}/plugins/xscript_module.plugin/source/Runtime/xscript_game_entry.cpp\" ${BACKEND_SOURCES})\n";
-        C += "target_include_directories(Game PRIVATE \"${XGPU_ROOT}\"";
+        // Visual Script (R84): the VisualScript compiler writes each graph's generated C++ to <project>/Cache/Script/VisualScript/<Function>.h (cache-owned, never a
+        // module's source_db); a module's code includes "<Function>.h" and calls it, so a graph edit rebuilds only what includes it
+        C += "target_include_directories(Game PRIVATE \"${XGPU_ROOT}\" \"${GAME_PROJECT_ROOT}/Cache/Script/VisualScript\"";
         for (const char* pDep : { "xECSV2/src", "xerr", "xresource_guid", "xtextfile", "xproperty", "xresource_pipeline_v2", "xstrtool", "xcontainer", "xdelegate", "xscheduler", "xmath", "xbits", "box3d/include" })
             C += std::format(" \"${{XGPU_ROOT}}/dependencies/{}\"", pDep);
         C += ")\ntarget_compile_definitions(Game PRIVATE XECS_BUILD_SHARED)\n";
