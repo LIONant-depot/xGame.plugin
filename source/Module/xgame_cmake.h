@@ -68,6 +68,9 @@ namespace xgame::cmake
         // kept out of the precompiled header.
         C += "set(BACKEND_SOURCES \"${XGPU_ROOT}/dependencies/xtextfile/source/xtextfile.cpp\" \"${XGPU_ROOT}/dependencies/xproperty/source/xcore/my_properties.cpp\")\n";
         C += "add_library(Game SHARED \"${XGPU_ROOT}/plugins/xscript_module.plugin/source/Runtime/xscript_game_entry.cpp\" ${BACKEND_SOURCES})\n";
+        // Visual Script slice 2: a graph that declares a system gets <Function>System.cpp there too (it registers an update system): compiled into the DLL with the modules,
+        // whose include folders and PCH it shares (CONFIGURE_DEPENDS: a new or removed graph system re-globs at build time)
+        C += "file(GLOB VISUAL_SCRIPT_SYSTEMS CONFIGURE_DEPENDS \"${GAME_PROJECT_ROOT}/Cache/Script/VisualScript/*.cpp\")\ntarget_sources(Game PRIVATE ${VISUAL_SCRIPT_SYSTEMS})\n";
         // Visual Script (R84): the VisualScript compiler writes each graph's generated C++ to <project>/Cache/Script/VisualScript/<Function>.h (cache-owned, never a
         // module's source_db); a module's code includes "<Function>.h" and calls it, so a graph edit rebuilds only what includes it
         C += "target_include_directories(Game PRIVATE \"${XGPU_ROOT}\" \"${GAME_PROJECT_ROOT}/Cache/Script/VisualScript\"";
@@ -78,7 +81,8 @@ namespace xgame::cmake
         C += "if(WIN32)\n  target_link_libraries(Game PRIVATE \"${XGPU_BIN_DIR}/xLIONCore/$<CONFIG>/LIONCore.lib\")\nelse()\n  target_link_libraries(Game PRIVATE \"${XGPU_BIN_DIR}/xLIONCore/libLIONCore.so\")\nendif()\n";
 
         C += "\n# what each module brings: its sources, include folders, libraries and defines\n";
-        C += "foreach(P IN LISTS XSCRIPT_MODULE_PREFIXES)\n  string(TOLOWER \"${P}\" p)\n  cmake_language(CALL ${p}_apply Game)\nendforeach()\n\n";
+        // (+ each module's own folder on the include path: a Visual Script system's .cpp includes the header of the component it runs on by name)
+        C += "foreach(P IN LISTS XSCRIPT_MODULE_PREFIXES)\n  string(TOLOWER \"${P}\" p)\n  cmake_language(CALL ${p}_apply Game)\n  target_include_directories(Game PRIVATE \"${${P}_SOURCE_ROOT}\")\nendforeach()\n\n";
         C += "target_precompile_headers(Game PRIVATE \"$<$<COMPILE_LANGUAGE:CXX>:${XGPU_ROOT}/dependencies/xECSV2/src/xecs.h>\" ${MODULE_PCH_HEADERS})\n";
         C += "set_source_files_properties(${BACKEND_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)\n\n";
 
